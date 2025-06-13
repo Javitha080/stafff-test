@@ -16,6 +16,7 @@ export interface StaffMember {
   image: string;
   description: string;
   category: string;
+  display_order?: number;
 }
 
 export const useSupabaseStaffData = (category: string) => {
@@ -33,7 +34,7 @@ export const useSupabaseStaffData = (category: string) => {
         .from('staff')
         .select('*')
         .eq('category', category)
-        .order('name');
+        .order('display_order', { ascending: true });
 
       if (error) {
         console.error('Error fetching staff:', error);
