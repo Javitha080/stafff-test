@@ -47,10 +47,10 @@ const HeadStaff = () => {
         <Navigation />
         <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
-            <Alert className="mb-8">
+            <Alert variant="destructive" className="mb-8">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
-                <span>{error}</span>
+                <span>{error.message}</span>
                 <Button onClick={retryFetch} variant="outline" size="sm">
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Retry

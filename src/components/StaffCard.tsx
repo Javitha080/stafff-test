@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit3, Trash2, Save, X, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +27,35 @@ const StaffCard = ({ staff, onUpdate, onDelete, canEdit = true }: StaffCardProps
   const [isEditing, setIsEditing] = useState(false);
   const [editedStaff, setEditedStaff] = useState(staff);
   const [imagePreview, setImagePreview] = useState(staff.image);
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (isEditing) {
+      setValidationErrors({});
+      // Reset editedStaff to original staff data when entering edit mode
+      // This ensures a clean slate if previous edits were cancelled or if multiple cards are on the page
+      setEditedStaff(staff);
+      setImagePreview(staff.image);
+    }
+  }, [isEditing, staff]);
+
+  const validateFields = (): boolean => {
+    const errors: { [key: string]: string } = {};
+    if (!editedStaff.name.trim()) {
+      errors.name = 'Name is required.';
+    }
+    if (!editedStaff.position.trim()) {
+      errors.position = 'Position is required.';
+    }
+    if (editedStaff.email && editedStaff.email.trim()) { // Validate only if email is not empty
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editedStaff.email)) {
+        errors.email = 'Invalid email format.';
+      }
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,14 +71,19 @@ const StaffCard = ({ staff, onUpdate, onDelete, canEdit = true }: StaffCardProps
   };
 
   const handleSave = () => {
+    if (!validateFields()) {
+      return; // Stop if validation fails
+    }
     onUpdate(staff.id, editedStaff);
     setIsEditing(false);
+    setValidationErrors({}); // Clear errors on successful save
   };
 
   const handleCancel = () => {
-    setEditedStaff(staff);
-    setImagePreview(staff.image);
+    // setEditedStaff(staff); // Already handled by useEffect on isEditing change
+    // setImagePreview(staff.image); // Already handled by useEffect on isEditing change
     setIsEditing(false);
+    setValidationErrors({}); // Clear errors on cancel
   };
 
   return (
@@ -60,7 +94,10 @@ const StaffCard = ({ staff, onUpdate, onDelete, canEdit = true }: StaffCardProps
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              setIsEditing(true);
+              // setValidationErrors({}); // Now handled by useEffect watching isEditing
+            }}
             className="h-8 w-8 p-0 bg-blue-500/20 hover:bg-blue-500/40 text-blue-600"
           >
             <Edit3 className="h-4 w-4" />
@@ -130,14 +167,18 @@ const StaffCard = ({ staff, onUpdate, onDelete, canEdit = true }: StaffCardProps
               onChange={(e) => setEditedStaff({ ...editedStaff, name: e.target.value })}
               className="w-full text-lg font-bold text-center bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-500"
               placeholder="Name"
+              required
             />
+            {isEditing && validationErrors.name && <p className="text-xs text-red-500 mt-1">{validationErrors.name}</p>}
             <input
               type="text"
               value={editedStaff.position}
               onChange={(e) => setEditedStaff({ ...editedStaff, position: e.target.value })}
               className="w-full text-sm font-medium text-center bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-blue-600 placeholder-gray-500"
               placeholder="Position"
+              required
             />
+            {isEditing && validationErrors.position && <p className="text-xs text-red-500 mt-1">{validationErrors.position}</p>}
             <input
               type="text"
               value={editedStaff.department}
@@ -166,6 +207,7 @@ const StaffCard = ({ staff, onUpdate, onDelete, canEdit = true }: StaffCardProps
               className="w-full text-sm text-center bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-gray-600 placeholder-gray-500"
               placeholder="Email"
             />
+            {isEditing && validationErrors.email && <p className="text-xs text-red-500 mt-1">{validationErrors.email}</p>}
             <input
               type="tel"
               value={editedStaff.phone}

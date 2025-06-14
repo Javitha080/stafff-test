@@ -3,11 +3,12 @@ import Navigation from '@/components/Navigation';
 import StaffCard from '@/components/StaffCard';
 import { useSupabaseStaffData } from '@/hooks/useSupabaseStaffData';
 import { useAuth } from '@/hooks/useAuth';
-import { Heart, Plus, Users, Star, Loader2 } from 'lucide-react';
+import { Heart, Plus, Users, Star, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PrimaryTeachers = () => {
-  const { staff, loading, updateStaff, deleteStaff, addStaff } = useSupabaseStaffData('primary-teachers');
+  const { staff, loading, error, updateStaff, deleteStaff, addStaff, retryFetch } = useSupabaseStaffData('primary-teachers');
   const { isEditor } = useAuth();
 
   const handleAddNew = () => {
@@ -30,9 +31,32 @@ const PrimaryTeachers = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
         <Navigation />
-        <div className="pt-24 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
+        <div className="pt-24 flex items-center justify-center min-h-[50vh]"> {/* Added min-h for consistency */}
+          <Loader2 className="h-8 w-8 animate-spin text-violet-600 mr-2" /> Loading primary teachers...
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
+        <Navigation />
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <Alert variant="destructive" className="mb-8">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>{error.message}</span>
+                <Button onClick={retryFetch} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+        {/* Optional: <Footer /> if it makes sense for error pages */}
       </div>
     );
   }
